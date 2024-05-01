@@ -49,9 +49,8 @@ deploy_docker_image_production:
   stage: deploy
   variables:
     linuxuser: freeproxy
-    #linuxhost: sof3.dakataki.de
-    #linuxhost: 185.205.210.20
-    linuxhost: 139.162.161.194 # fra1.dakataki.de
+    #linuxhost: 185.205.210.20 # sof3
+    linuxhost: 139.162.161.194 # fra1
 
   before_script: 
     # Set up SSH access:
