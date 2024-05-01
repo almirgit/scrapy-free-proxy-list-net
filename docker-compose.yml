@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  scraper:
+    #image: gitlab.kodera.hr:5050/almir/scrapy-free-proxy-list-net:alpine-0.2
+    image: gitlab.kodera.hr:5050/almir/scrapy-free-proxy-list-net:__GITLAB_CI_IMAGE_TAG_ONLY__
+    container_name: scrapy_free_proxy_list_net_1
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        #source: /home/almir/var/docker/free-proxy-list/data
+        source: /var/scrapy-free-proxy-list-net/data
+        target: /app-proxy/data
+      - type: bind
+        source: /var/scrapy-free-proxy-list-net/config
+        target: /app-proxy/config
+    logging:
+      #driver: json-file
+      options:
+          max-size: "20m"
+          max-file: "5"

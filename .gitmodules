@@ -1,0 +1,10 @@
+# NOTE: For all projects turn off "Allow access to this project with a CI_JOB_TOKEN" in Settings -> CI/CD
+[submodule "python/python-modules/dbops"]
+	path = python/python-modules/dbops
+	url = ../../python-modules/dbops.git
+[submodule "python/python-modules/call_subprocess"]
+    path  = python/python-modules/call_subprocess
+    url    = ../../python-modules/call_subprocess.git
+[submodule "python/python-modules/dbops_proxy_load"]
+	path = python/python-modules/dbops_proxy_load
+	url = ../../python-modules/dbops_proxy_load

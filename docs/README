@@ -1,0 +1,4 @@
+Current status: container deployed on fra1, scraping every 30 minutes
+NEXT: add status checker for output confirmation and alerting via email. 
+
+Main development branch: master

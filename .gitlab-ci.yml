@@ -1,0 +1,69 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  #IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  #IMAGE_TAG: $CI_REGISTRY_IMAGE:latest
+  IMAGE_TAG_ONLY: 0.2-$CI_COMMIT_SHORT_SHA
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$IMAGE_TAG_ONLY
+  #IMAGE_TAG: $CI_REGISTRY_IMAGE:alpine-0.2-$CI_COMMIT_REF_SLUG
+
+#default:
+#  hooks:
+#    pre_get_sources_script:
+#      - apk add openssh-client
+    
+build_docker_image:
+  tags:
+    - shared-runner-01
+    - shared-runner-02
+  image: docker:20.10.16
+  stage: build
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  #before_script:
+  #  - git submodule sync --recursive
+  #  - git submodule update --init --recursive
+  script:
+    - echo "$CI_REGISTRY_IMAGE"
+    - echo "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+    - echo "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - echo "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
+    - echo "docker build -t $IMAGE_TAG python/"
+
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_TAG python/
+    - docker push $IMAGE_TAG
+  only:
+    #- v0.2.0-rc2
+    - master
+
+
+#deploy_docker_image_staging:
+deploy_docker_image_production:
+  tags:
+    - shared-runner-01
+    - shared-runner-02
+  image: instrumentisto/rsync-ssh:alpine3.17
+  stage: deploy
+  variables:
+    linuxuser: freeproxy
+    #linuxhost: sof3.dakataki.de
+    #linuxhost: 185.205.210.20
+    linuxhost: 139.162.161.194 # fra1.dakataki.de
+
+  before_script: 
+    # Set up SSH access:
+    - mkdir -p -m 700 ~/.ssh && echo "$SSH_DEPLOY_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_*
+  script:
+    - echo ssh -o StrictHostKeyChecking=no $linuxuser@$linuxhost "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && docker pull $IMAGE_TAG"
+    #- ssh -o StrictHostKeyChecking=no $linuxuser@$linuxhost "mkdir -p ~/var/docker/free-proxy-list/{data,config} ~/scrapy-free-proxy-list-net && chmod u+s ~/var/docker/free-proxy-list/data && setfacl -d -m u:almir:rw ~/var/docker/free-proxy-list/data"
+    - ssh -o StrictHostKeyChecking=no $linuxuser@$linuxhost "mkdir -p ~/scrapy-free-proxy-list-net"
+    - scp -o StrictHostKeyChecking=no docker-compose.yml ${linuxuser}@${linuxhost}:~/scrapy-free-proxy-list-net/
+    - ssh -o StrictHostKeyChecking=no $linuxuser@$linuxhost "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && docker pull $IMAGE_TAG"
+    - ssh -o StrictHostKeyChecking=no $linuxuser@$linuxhost "cd ~/scrapy-free-proxy-list-net && sed -i 's/__GITLAB_CI_IMAGE_TAG_ONLY__/$IMAGE_TAG_ONLY/' docker-compose.yml && docker compose down && docker compose up -d"
+  only:
+    #- v0.2.0-rc2
+    - master
+

@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  scraper:
+    image: scrapy-free-proxy-list-net
+    container_name: scrapy_free_proxy_list_net_1
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /var/scrapy-free-proxy-list-net/data
+        target: /app-proxy/data
+      - type: bind
+        source: /var/scrapy-free-proxy-list-net/config
+        target: /app-proxy/config
+    logging:
+      #driver: json-file
+      options:
+          max-size: "20m"
+          max-file: "5"
